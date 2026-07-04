@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>课程表问题（拓扑排序）- AlgoViz</title>
+  <link rel="stylesheet" href="../../css/base.css">
+  <link rel="stylesheet" href="../../css/visualizer.css">
+</head>
+<body>
+
+<div class="algorithm-page-layout">
+  <div class="visualization-area">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <div class="info-panel">
+    <div class="panel-section">
+      <a href="../../index.html" class="back-link">&larr; 返回首页</a>
+      <h1>课程表问题（拓扑排序）</h1>
+      <span class="difficulty-badge">中等</span>
+    </div>
+
+    <div class="panel-section">
+      <h3>📝 题目描述</h3>
+      <p>你这个学期必须选修 <code>numCourses</code> 门课程，记为 <code>0</code> 到 <code>numCourses - 1</code>。</p>
+      <p>在选修某些课程之前需要一些先修课程。先修课程按数组 <code>prerequisites</code> 给出，其中 <code>prerequisites[i] = [ai, bi]</code>，表示如果要学习课程 <code>ai</code> 则必须先学习课程 <code>bi</code>。</p>
+      <p>请你判断是否可能完成所有课程的学习？如果可以，返回 <code>true</code>；否则，返回 <code>false</code>。</p>
+    </div>
+
+    <div class="panel-section">
+      <h3>💡 思路解析</h3>
+      <p>拓扑排序的核心思想是：在有向无环图（DAG）中，不断找到入度为 0 的节点并移除，若最终所有节点都被处理，则说明无环；否则存在环。</p>
+      <p>本题采用 BFS（Kahn 算法）实现：</p>
+      <p>1. 构建邻接表，计算每个节点的入度。</p>
+      <p>2. 将所有入度为 0 的节点加入队列。</p>
+      <p>3. 依次从队列取出节点，将其所有邻居的入度减 1，若邻居入度变为 0 则加入队列。</p>
+      <p>4. 若最终处理的节点数等于总课程数，则无环，可完成全部课程。</p>
+    </div>
+
+    <div class="panel-section">
+      <h3>⚙️ 自定义输入</h3>
+      <label>课程数量：<input type="number" id="numCourses" value="4" min="2" max="20"></label>
+      <label>先修关系：<textarea id="prerequisites" rows="3">[[1,0],[2,0],[3,1],[3,2]]</textarea></label>
+      <div class="input-buttons">
+        <button id="randomBtn">随机生成</button>
+        <button id="applyBtn">应用数据</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h3>💻 代码实现</h3>
+      <div id="code-display" class="code-display"></div>
+    </div>
+
+    <div class="panel-section">
+      <h3>📊 复杂度分析</h3>
+      <p>时间复杂度: O(V + E) &nbsp;|&nbsp; 空间复杂度: O(V + E)</p>
+      <p>其中 V 为课程数，E 为先修关系数。每个节点和每条边最多被访问一次。</p>
+    </div>
+  </div>
+</div>
+
+<div class="description-box">
+  <p id="step-description" class="step-description-text">点击播放按钮开始演示</p>
+</div>
+
+<div class="control-bar">
+  <button id="btn-first" title="第一步">|&lsaquo;</button>
+  <button id="btn-prev" title="上一步">&lsaquo;</button>
+  <button id="btn-play" title="播放/暂停">&#9654;</button>
+  <button id="btn-next" title="下一步">&rsaquo;</button>
+  <button id="btn-last" title="最后一步">&rsaquo;|</button>
+
+  <input type="range" id="step-slider" min="0" max="1" value="0">
+
+  <label>速度: <input type="range" id="speed-slider" min="100" max="3000" value="1000"></label>
+  <span id="step-counter">0 / 0</span>
+</div>
+
+<script src="../../js/core/parser.js"></script>
+<script src="../../js/core/highlighter.js"></script>
+<script src="../../js/core/renderer.js"></script>
+<script src="../../js/core/animator.js"></script>
+<script src="../../js/algorithms/graph/topological-sort.js"></script>
+
+<script>
+(function() {
+  var CODE_TEXT = [
+    'function topologicalSort(numCourses, prerequisites) {',
+    '    // \u6784\u5efa\u90bb\u63a5\u8868\u548c\u5165\u5ea6\u6570\u7ec4',
+    '    const adj = Array.from({length: numCourses}, () => []);',
+    '    const indegree = new Array(numCourses).fill(0);',
+    '    for (const [course, prereq] of prerequisites) {',
+    '        adj[prereq].push(course);',
+    '        indegree[course]++;',
+    '    }',
+    '    ',
+    '    // \u62d3\u6251\u6392\u5e8f (BFS - Kahn \u7b97\u6cd5)',
+    '    const queue = [];',
+    '    const result = [];',
+    '    ',
+    '    // \u5c06\u6240\u6709\u5165\u5ea6\u4e3a 0 \u7684\u8282\u70b9\u52a0\u5165\u961f\u5217',
+    '    for (let i = 0; i < numCourses; i++) {',
+    '        if (indegree[i] === 0) {',
+    '            queue.push(i);',
+    '        }',
+    '    }',
+    '    ',
+    '    while (queue.length > 0) {',
+    '        const course = queue.shift();',
+    '        result.push(course);',
+    '        ',
+    '        for (const next of adj[course]) {',
+    '            indegree[next]--;',
+    '            if (indegree[next] === 0) {',
+    '                queue.push(next);',
+    '            }',
+    '        }',
+    '    }',
+    '    ',
+    '    return result.length === numCourses ? result : [];',
+    '}'
+  ].join('\n');
+
+  function fallbackHighlighter(containerId, codeText) {
+    this.container = document.getElementById(containerId);
+    this.codeText = codeText;
+    this.currentLine = -1;
+    this.lines = codeText.split('\n');
+    this._render();
+  }
+
+  fallbackHighlighter.prototype._render = function() {
+    this.container.innerHTML = '';
+    for (var i = 0; i < this.lines.length; i++) {
+      var div = document.createElement('div');
+      div.className = 'code-line';
+      div.setAttribute('data-line', i);
+      var span = document.createElement('span');
+      span.style.display = 'inline-block';
+      span.style.width = '30px';
+      span.style.color = '#64748b';
+      span.style.textAlign = 'right';
+      span.style.marginRight = '12px';
+      span.style.userSelect = 'none';
+      span.textContent = i + 1;
+      div.appendChild(span);
+      div.appendChild(document.createTextNode(this.lines[i]));
+      this.container.appendChild(div);
+    }
+  };
+
+  fallbackHighlighter.prototype.highlight = function(lineNumber) {
+    if (this.currentLine === lineNumber) return;
+    var allLines = this.container.querySelectorAll('.code-line');
+    for (var i = 0; i < allLines.length; i++) {
+      allLines[i].classList.remove('highlighted');
+    }
+    if (lineNumber >= 0 && lineNumber < allLines.length) {
+      allLines[lineNumber].classList.add('highlighted');
+      allLines[lineNumber].scrollIntoView({ block: 'nearest' });
+    }
+    this.currentLine = lineNumber;
+  };
+
+  function fallbackInputParser() {}
+
+  fallbackInputParser.prototype.parseGraphInput = function(num, prereqStr) {
+    var parsed = [];
+    try {
+      parsed = JSON.parse(prereqStr);
+    } catch (e) {
+      return null;
+    }
+    if (!Array.isArray(parsed)) return null;
+    for (var i = 0; i < parsed.length; i++) {
+      if (!Array.isArray(parsed[i]) || parsed[i].length !== 2) return null;
+      if (parsed[i][0] < 0 || parsed[i][0] >= num) return null;
+      if (parsed[i][1] < 0 || parsed[i][1] >= num) return null;
+    }
+    return parsed;
+  };
+
+  fallbackInputParser.prototype.generateRandomGraph = function(n) {
+    n = n || (Math.floor(Math.random() * 5) + 4);
+    var maxEdges = n * (n - 1) / 2;
+    var numEdges = Math.floor(Math.random() * Math.min(maxEdges, n * 2)) + 1;
+    var edgeSet = {};
+    var edges = [];
+    var attempts = 0;
+    while (edges.length < numEdges && attempts < numEdges * 10) {
+      var a = Math.floor(Math.random() * n);
+      var b = Math.floor(Math.random() * n);
+      if (a === b) { attempts++; continue; }
+      var key = Math.min(a, b) + ',' + Math.max(a, b);
+      if (edgeSet[key]) { attempts++; continue; }
+      edgeSet[key] = true;
+      edges.push([a, b]);
+      attempts++;
+    }
+    return { numCourses: n, prerequisites: edges };
+  };
+
+  var HighlighterClass = (typeof Highlighter !== 'undefined') ? Highlighter : fallbackHighlighter;
+  var ParserClass = (typeof InputParser !== 'undefined') ? InputParser : fallbackInputParser;
+
+  var parser = new ParserClass();
+  var highlighter = null;
+  var renderer = null;
+  var animator = null;
+
+  function convertHighlightNodes(nodesObj) {
+    var result = [];
+    if (!nodesObj) return result;
+    if (Array.isArray(nodesObj)) return nodesObj;
+    var statuses = ['processing', 'completed', 'inQueue'];
+    for (var s = 0; s < statuses.length; s++) {
+      var status = statuses[s];
+      var ids = nodesObj[status];
+      if (Array.isArray(ids)) {
+        for (var i = 0; i < ids.length; i++) {
+          result.push({ id: ids[i], status: status });
+        }
+      }
+    }
+    return result;
+  }
+
+  function updateVisualization(snapshot) {
+    if (!snapshot) return;
+
+    var renderSnapshot = {
+      data: snapshot.data,
+      highlight: {
+        codeLine: snapshot.highlight.codeLine,
+        nodes: convertHighlightNodes(snapshot.highlight.nodes),
+        arrayIndices: snapshot.highlight.arrayIndices || []
+      }
+    };
+
+    if (renderer) {
+      renderer.draw(renderSnapshot);
+    }
+
+    if (highlighter && snapshot.highlight.codeLine !== undefined) {
+      highlighter.highlight(snapshot.highlight.codeLine);
+    }
+
+    var descEl = document.getElementById('step-description');
+    if (descEl && snapshot.description) {
+      descEl.textContent = snapshot.description;
+    }
+
+    var slider = document.getElementById('step-slider');
+    var counter = document.getElementById('step-counter');
+    if (animator && slider && counter) {
+      var progress = animator.getProgress();
+      slider.value = progress.current;
+      counter.textContent = (progress.current + 1) + ' / ' + (progress.total + 1);
+    }
+
+    var playBtn = document.getElementById('btn-play');
+    if (playBtn && animator) {
+      playBtn.innerHTML = animator.isPlaying ? '&#9646;&#9646;' : '&#9654;';
+    }
+  }
+
+  function resizeCanvas() {
+    var canvas = document.getElementById('canvas');
+    var area = document.querySelector('.visualization-area');
+    if (!canvas || !area) return;
+    var rect = area.getBoundingClientRect();
+    var w = rect.width - 48;
+    var h = Math.max(400, rect.height - 48);
+    canvas.width = w;
+    canvas.height = h;
+    if (renderer) {
+      renderer.resizeCanvas(w, h);
+    }
+  }
+
+  function initialize() {
+    var numInput = document.getElementById('numCourses');
+    var prereqInput = document.getElementById('prerequisites');
+    var num = parseInt(numInput.value, 10) || 4;
+    var prereqStr = prereqInput.value || '[[1,0],[2,0],[3,1],[3,2]]';
+
+    var parsedPrereqs;
+    try {
+      var parsed = parser.parseGraphInput(num, prereqStr);
+      parsedPrereqs = Array.isArray(parsed) ? parsed : parsed.prerequisites;
+      num = Array.isArray(parsed) ? num : parsed.numCourses;
+    } catch (e) {
+      document.getElementById('step-description').textContent = '输入格式错误：' + e.message;
+      return;
+    }
+
+    var topo = new TopologicalSort(num, parsedPrereqs);
+    var steps = topo.generateSteps();
+
+    if (steps.length === 0) {
+      document.getElementById('step-description').textContent = '未能生成步骤';
+      return;
+    }
+
+    if (animator) {
+      animator.pause();
+    }
+
+    renderer = new GraphRenderer('canvas');
+    highlighter = new HighlighterClass('code-display', CODE_TEXT);
+
+    resizeCanvas();
+
+    animator = new Animator({
+      steps: steps,
+      onStep: updateVisualization,
+      onComplete: function() {
+        var playBtn = document.getElementById('btn-play');
+        if (playBtn) playBtn.innerHTML = '&#9654;';
+      }
+    });
+
+    var slider = document.getElementById('step-slider');
+    slider.min = 0;
+    slider.max = steps.length - 1;
+    slider.value = 0;
+
+    animator.jumpTo(0);
+  }
+
+  document.getElementById('btn-play').addEventListener('click', function() {
+    if (!animator) return;
+    if (animator.isPlaying) {
+      animator.pause();
+      this.innerHTML = '&#9654;';
+    } else {
+      if (animator.currentStep >= animator.steps.length - 1) {
+        animator.jumpTo(0);
+      }
+      animator.play();
+      this.innerHTML = '&#9646;&#9646;';
+    }
+  });
+
+  document.getElementById('btn-next').addEventListener('click', function() {
+    if (!animator) return;
+    animator.pause();
+    document.getElementById('btn-play').innerHTML = '&#9654;';
+    animator.next();
+  });
+
+  document.getElementById('btn-prev').addEventListener('click', function() {
+    if (!animator) return;
+    animator.pause();
+    document.getElementById('btn-play').innerHTML = '&#9654;';
+    animator.prev();
+  });
+
+  document.getElementById('btn-first').addEventListener('click', function() {
+    if (!animator) return;
+    animator.pause();
+    document.getElementById('btn-play').innerHTML = '&#9654;';
+    animator.jumpTo(0);
+  });
+
+  document.getElementById('btn-last').addEventListener('click', function() {
+    if (!animator) return;
+    animator.pause();
+    document.getElementById('btn-play').innerHTML = '&#9654;';
+    animator.jumpTo(animator.steps.length - 1);
+  });
+
+  document.getElementById('step-slider').addEventListener('input', function() {
+    if (!animator) return;
+    animator.jumpTo(parseInt(this.value, 10));
+  });
+
+  document.getElementById('speed-slider').addEventListener('input', function() {
+    if (!animator) return;
+    animator.setSpeed(parseInt(this.value, 10));
+  });
+
+  document.getElementById('applyBtn').addEventListener('click', function() {
+    initialize();
+  });
+
+  document.getElementById('randomBtn').addEventListener('click', function() {
+    var n = parseInt(document.getElementById('numCourses').value, 10) || 4;
+    var data = parser.generateRandomGraph(n);
+    document.getElementById('numCourses').value = data.numCourses;
+    document.getElementById('prerequisites').value = JSON.stringify(data.prerequisites);
+    initialize();
+  });
+
+  window.addEventListener('resize', function() {
+    resizeCanvas();
+    if (animator) {
+      updateVisualization(animator.steps[animator.currentStep]);
+    }
+  });
+
+  initialize();
+})();
+</script>
+
+</body>
+</html>

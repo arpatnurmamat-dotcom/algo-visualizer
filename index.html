@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlgoViz - 算法可视化学习平台</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/visualizer.css">
+  <style>
+    /* ---- Navigation ---- */
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--bg-tertiary);
+      padding: 0 24px;
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .nav-brand .logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: -0.02em;
+    }
+
+    .nav-brand .tagline {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: color var(--transition-base);
+    }
+
+    .nav-links a:hover {
+      color: var(--primary-light);
+    }
+
+    /* ---- Hero Section ---- */
+    .hero {
+      padding: 100px 24px 80px;
+      text-align: center;
+      background: linear-gradient(
+        160deg,
+        var(--bg-primary) 0%,
+        #141e38 40%,
+        #1a2540 70%,
+        var(--bg-primary) 100%
+      );
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(
+        ellipse at 30% 50%,
+        rgba(102, 126, 234, 0.08) 0%,
+        transparent 50%
+      );
+      pointer-events: none;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.7;
+      position: relative;
+    }
+
+    /* ---- Category Grid ---- */
+    .categories {
+      padding: 64px 24px;
+    }
+
+    .categories-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .categories h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 40px;
+      color: var(--text-primary);
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .category-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .category-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      opacity: 0;
+      transition: opacity var(--transition-base);
+    }
+
+    .category-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary);
+    }
+
+    .category-card:hover::after {
+      opacity: 1;
+    }
+
+    .category-card .card-icon {
+      font-size: 32px;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .category-card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .category-card .card-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .category-card .card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--primary);
+      margin-top: 8px;
+      transition: gap var(--transition-base);
+    }
+
+    .category-card:hover .card-link {
+      gap: 10px;
+    }
+
+    .category-card .card-link .arrow {
+      transition: transform var(--transition-base);
+    }
+
+    .category-card:hover .card-link .arrow {
+      transform: translateX(2px);
+    }
+
+    .category-card.coming-soon {
+      opacity: 0.55;
+    }
+
+    .category-card.coming-soon:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: var(--bg-tertiary);
+    }
+
+    .category-card.coming-soon:hover::after {
+      opacity: 0;
+    }
+
+    .coming-soon-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+      margin-top: 4px;
+      letter-spacing: 0.03em;
+    }
+
+    /* ---- Footer ---- */
+    .site-footer {
+      border-top: 1px solid var(--bg-tertiary);
+      padding: 32px 24px;
+      text-align: center;
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-inner a {
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: color var(--transition-base);
+    }
+
+    .footer-inner a:hover {
+      color: var(--primary-light);
+    }
+
+    .footer-inner .footer-note {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 768px) {
+      .hero {
+        padding: 64px 16px 48px;
+      }
+
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .hero p {
+        font-size: 15px;
+      }
+
+      .nav-brand .tagline {
+        display: none;
+      }
+
+      .nav-links {
+        gap: 16px;
+      }
+
+      .categories {
+        padding: 40px 16px;
+      }
+
+      .category-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-nav">
+    <nav class="nav-inner">
+      <div class="nav-brand">
+        <span class="logo">AlgoViz</span>
+        <span class="tagline">算法可视化学习平台</span>
+      </div>
+      <div class="nav-links">
+        <a href="#">首页</a>
+        <a href="#">图论算法</a>
+        <a href="#">关于</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>交互式算法可视化</h1>
+      <p>打开即用，支持自动播放与手动单步，自定义输入数据</p>
+    </section>
+
+    <section class="categories">
+      <div class="categories-inner">
+        <h2>算法分类</h2>
+        <div class="category-grid">
+
+          <article class="category-card">
+            <div class="card-icon">&#x25B3;</div>
+            <h3>图论算法</h3>
+            <p class="card-subtitle">拓扑排序、最短路径、最小生成树等图算法的交互式演示</p>
+            <a href="pages/graph/topological-sort.html" class="card-link">
+              开始学习 <span class="arrow">&#x2192;</span>
+            </a>
+          </article>
+
+          <article class="category-card coming-soon">
+            <div class="card-icon">&#x21C4;</div>
+            <h3>排序算法</h3>
+            <p class="card-subtitle">冒泡排序、快速排序、归并排序等经典排序算法</p>
+            <span class="coming-soon-badge">Coming Soon</span>
+          </article>
+
+          <article class="category-card coming-soon">
+            <div class="card-icon">&#x25C7;</div>
+            <h3>搜索算法</h3>
+            <p class="card-subtitle">二分查找、深度优先搜索、广度优先搜索等</p>
+            <span class="coming-soon-badge">Coming Soon</span>
+          </article>
+
+          <article class="category-card coming-soon">
+            <div class="card-icon">&#x21C6;</div>
+            <h3>双指针</h3>
+            <p class="card-subtitle">对撞指针、快慢指针等双指针技巧与经典问题</p>
+            <span class="coming-soon-badge">Coming Soon</span>
+          </article>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a href="#">GitHub</a>
+      <span class="footer-note">纯静态，零依赖</span>
+    </div>
+  </footer>
+
+</body>
+</html>
